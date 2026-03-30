@@ -1,561 +1,485 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using R=System.Double;
+using Z=System.Int64;
+using N=System.UInt64;
+using C=Complex;
+using H=Quaternion;
 
 namespace mathematics;
 public class Mdi{
 	//数学定数
 	public const double e=Math.E;
 	public const double pi=Math.PI;
-	public static readonly Complex cone=new Complex(1,0);
-	public static readonly Complex czero=new Complex(0,0);
-	public static readonly Complex i=new Complex(0,1);
+	public static readonly C cone=new(1,0);
+	public static readonly C czero=new(0,0);
+	public static readonly C i=new(0,1);
 	//初等関数やオーバーロードなど
-	public static double sqrt(double a)=>
+	public static R sqrt(R a)=>
 		Math.Sqrt(a);
-	public static double abs(double a)=>
+	public static Z abs(Z a)=>
 		Math.Abs(a);
-	public static double abs(Complex a)=>
+	public static R abs(R a)=>
+		Math.Abs(a);
+	public static R abs(C a)=>
 		a.z.length;
-	public static double abs(Quat a)=>
+	public static R abs(H a)=>
 		a.q.length;
-	public static double sin(double a)=>
+	public static R sin(R a)=>
 		Math.Sin(a);
-	public static Complex sin(Complex a)=>
-		(Mdi.exp(Mdi.i*a)-Mdi.exp(-Mdi.i*a))*new Complex(0,-1/2);
-	public static double cos(double a)=>
+	public static C sin(C a)=>
+		(exp(i*a)-exp(-i*a))*new C(0,-1/2);
+	public static R cos(R a)=>
 		Math.Cos(a);
-	public static Complex cos(Complex a)=>
-		(Mdi.exp(Mdi.i*a)+Mdi.exp(-Mdi.i*a))/2;
-	public static double tan(double a)=>
+	public static C cos(C a)=>
+		(exp(i*a)+exp(-i*a))/2;
+	public static R tan(R a)=>
 		Math.Tan(a);
-	public static double asin(double a)=>
+	public static R asin(R a)=>
 		Math.Asin(a);
-	public static double acos(double a)=>
+	public static R acos(R a)=>
 		Math.Acos(a);
-	public static double atan(double a)=>
+	public static R atan(R a)=>
 		Math.Atan(a);
-	public static double sinh(double a)=>
+	public static R sinh(R a)=>
 		Math.Sinh(a);
-	public static Complex sinh(Complex a)=>
-		(Mdi.exp(a)-Mdi.exp(-a))/2;
-	public static double cosh(double a)=>
+	public static C sinh(C a)=>
+		(exp(a)-exp(-a))/2;
+	public static R cosh(R a)=>
 		Math.Cosh(a);
-	public static Complex cosh(Complex a)=>
-		(Mdi.exp(a)+Mdi.exp(-a))/2;
-	public static double tanh(double a)=>
+	public static C cosh(C a)=>
+		(exp(a)+exp(-a))/2;
+	public static R tanh(R a)=>
 		Math.Tanh(a);
-	public static Complex tanh(Complex a){
-		Complex ez=Mdi.exp(a);
-		Complex mez=Mdi.exp(-a);
+	public static C tanh(C a){
+		C ez=exp(a);
+		C mez=exp(-a);
 		return (ez-mez)/(ez+mez);
 	}
-	public static double asinh(double a)=>
+	public static R asinh(R a)=>
 		Math.Asinh(a);
-	public static double acosh(double a)=>
+	public static R acosh(R a)=>
 		Math.Acosh(a);
-	public static double atanh(double a)=>
+	public static R atanh(R a)=>
 		Math.Atanh(a);
-	public static double atan2(double a,double b)=>
+	public static R atan2(R a,R b)=>
 		Math.Atan2(a,b);
-	public static double max(double a,double b)=>Math.Max(a,b);
-	public static double min(double a,double b)=>Math.Min(a,b);
+	public static R max(R a,R b)=>Math.Max(a,b);
+	public static R min(R a,R b)=>Math.Min(a,b);
 	public static float min(float a,float b)=>Math.Min(a,b);
-	public static double dot(Vector a,Vector b){
-		double res=0;
-		for(int k=0; k<Mdi.max(a.dim,b.dim); ++k){
+	public static R dot<V>(V a,V b) where V:IMetricVectorSpace<V>{
+		return a|b;
+	}
+	public static R dot(Vector a,Vector b){
+		R res=0;
+		for(int k=0; k<max(a.dim,b.dim); ++k){
 			res+=a[k]*b[k];
 		}
 		return res;
 	}
-	public static double dot(vec2 a,vec2 b)=>
+	public static R dot(vec2 a,vec2 b)=>
 	a.x*b.x+a.y*b.y;
-	public static double dot(vec3 a,vec3 b)=>
+	public static R dot(vec3 a,vec3 b)=>
 	a.x*b.x+a.y*b.y+a.z*b.z;
-	public static double dot(vec4 a,vec4 b)=>
+	public static R dot(vec4 a,vec4 b)=>
 	a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w;
-	public static double cross(vec2 a,vec2 b)=>
+	public static R cross(vec2 a,vec2 b)=>
 	a.x*b.y-a.y*b.x;
 	public static vec3 cross(vec3 a,vec3 b)=>
 	new vec3(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x);
-	public static Complex conj(Complex a)=>
-	new Complex(a.real,-a.imag);
-	public static double arg(Complex a)=>
+	public static C conj(C a)=>
+	new C(a.real,-a.imag);
+    public static H conj(H a)=>
+	new H(a.real,-a.imag);
+	public static R arg(C a)=>
 	Math.Atan2(a.imag,a.real);
-	public static double arg(vec2 a)=>
+	public static R arg(vec2 a)=>
 	Math.Atan2(a.y,a.x);
 	public static Vector normalize(Vector a){
-		double r=a.length;
+		R r=a.length;
 		if(r==0){
 			return new Vector(a.dim);
 		}
 		return a/r;
 	}
 	public static vec2 normalize(vec2 a){
-		double r=a.length;
+		R r=a.length;
 		if(r==0){
 			return new vec2(0,0);
 		}
 		return a/r;
 	}
 	public static vec3 normalize(vec3 a){
-		double r=a.length;
+		R r=a.length;
 		if(r==0){
 			return new vec3(0,0,0);
 		}
 		return a/r;
 	}
 	public static vec4 normalize(vec4 a){
-		double r=a.length;
+		R r=a.length;
 		if(r==0){
 			return 0;
 		}
 		return a/r;
 	}
-	public static Complex normalize(Complex a){
-		double r=abs(a);
+	public static C normalize(C a){
+		R r=abs(a);
 		if(r==0){
 			return 0;
 		}
 		return a/r;
 	}
-	public static Quat normalize(Quat a){
-		double r=abs(a);
+	public static H normalize(H a){
+		R r=abs(a);
 		if(r==0){
 			return 0;
 		}
 		return a/r;
 	}
-	public static double exp(double a)=>Math.Exp(a);
-	public static Complex exp(Complex a)=>Math.Exp(a.real)*new Complex(Mdi.cos(a.imag),Mdi.sin(a.imag));
-	public static Quat exp(Quat a){
-		double abs=a.imag.length;
-		double sin=Mdi.sin(abs)/abs;
-		return Math.Exp(a.real)*new Quat(Mdi.cos(abs),a.i*sin,a.j*sin,a.k*sin);
+	public static R det(mat2 a)=>a.a*a.d-a.b*a.c;
+	public static R exp(R a)=>Math.Exp(a);
+	public static C exp(C a)=>exp(a.real)*new C(cos(a.imag),sin(a.imag));
+	public static H exp(H a){
+		R abs=a.imag.length;
+		R sin=Mdi.sin(abs)/abs;
+		return exp(a.real)*new H(cos(abs),a.i*sin,a.j*sin,a.k*sin);
 	}
-	public static double ln(double a)=>Math.Log(a);
-	public static Complex ln(Complex a)=>new Complex(Math.Log(Mdi.dot(a.z,a.z))/2,Mdi.arg(a));
-	public static Complex poler(double radius,double theta)=>radius*new Complex(Mdi.cos(theta),Mdi.sin(theta));
-	public static double pow(double a,double b)=>Math.Pow(a,b);
-	public static Complex pow(Complex a,double b)=>Mdi.poler(Math.Pow(Mdi.abs(a),b),b*Mdi.arg(a));
-	public static Complex pow(Complex a,Complex b){
+	public static R floor(R a)=>Math.Floor(a);
+	public static R round(R a)=>Math.Round(a);
+	public static R ln(R a)=>Math.Log(a);
+	public static R log(R a,R b)=>Math.Log(b)/Math.Log(a);
+	public static C ln(C a)=>new C(Math.Log(dot(a.z,a.z))/2,arg(a));
+	public static C poler(R radius,R theta)=>radius*new C(cos(theta),sin(theta));
+	public static R pow(R a,R b)=>Math.Pow(a,b);
+	public static C pow(C a,R b)=>poler(pow(abs(a),b),b*arg(a));
+	public static C pow(C a,C b){
 		//a^b=e^(blna)
-		return Mdi.exp(b*Mdi.ln(a));
+		return exp(b*ln(a));
 	}
-	public static Complex pow(double a,Complex b){
+	public static C pow(R a,C b){
 		//a^b=e^(blna)
-		return Mdi.exp(b*Mdi.ln(a));
+		return exp(b*ln(a));
+	}
+	public static R honeycomb2(N p,N q){
+		if((p-2)*(q-2)==4){
+			return 1;
+		}
+		R tan=Mdi.tan(pi/p)*Mdi.tan(pi/q);
+        return sqrt(abs(tan-1)/(tan+1));
+	}
+	public static R honeycomb2Curvature(N p,N q){
+		if((p-2)*(q-2)==4){
+			return 0;
+		}
+		if((p-2)*(q-2)<4){
+			return 1;
+		}
+		return -1;
+	}
+	public static R ceil(R x){
+		R y=x%1;
+		if(y==0){
+			return x;
+		}
+		if(y<0){
+			return -floor(-x);
+		}
+		return floor(x)+1;
+	}
+	//抽象的な定義
+	public static R EuclideanDistance<V>(V a,V b) where V:IMetricVectorSpace<V>{
+		return sqrt((a-b)|(a-b));
 	}
 }
-
-public struct vec2{
-	public double x;
-	public double y;
-	public const int dim=2;
-	public vec2(double X,double Y){
-		x=X;
-		y=Y;
-	}
-	
-	public static implicit operator vec2(double a)=>
-	new vec2(a,a);
-	
-	public static implicit operator vec2((double,double) t) =>
-	new vec2(t.Item1,t.Item2);
-	
-	public static vec2 operator +(vec2 a, vec2 b)=>
-	new vec2(a.x+b.x,a.y+b.y);
-	public static vec2 operator -(vec2 a, vec2 b)=>
-	new vec2(a.x-b.x,a.y-b.y);
-	public static vec2 operator -(vec2 a)=>
-	new vec2(-a.x,-a.y);
-	public static vec2 operator *(vec2 a, vec2 b)=>
-	new vec2(a.x*b.x,a.y*b.y);
-	public static vec2 operator /(vec2 a, vec2 b)=>
-	new vec2(a.x/b.x,a.y/b.y);
-	public static double operator |(vec2 a, vec2 b)=>
-	Mdi.dot(a,b);
-	public static double operator ^(vec2 a, vec2 b)=>
-	Mdi.cross(a,b);
-	public double length=>Math.Sqrt(x*x+y*y);
-	public vec3 extend(double a)=>
-		new vec3(x,y,a);
-	public override string ToString() => $"({x},{y})";
-}
-public struct vec3{
-	public double x;
-	public double y;
-	public double z;
-	public const int dim=3;
-	public vec3(double X,double Y,double Z){
-		x=X;
-		y=Y;
-		z=Z;
-	}
-	
-	public static implicit operator vec3(double a) =>
-	new vec3(a,a,a);
-	
-	public static implicit operator vec3(vec2 a) =>
-	new vec3(a,0);
-	
-	public static implicit operator vec3((double,double,double) t) =>
-	new vec3(t.Item1,t.Item2,t.Item3);
-	
-	//二項演算
-	public static vec3 operator +(vec3 a, vec3 b)=>
-	new vec3(a.x+b.x,a.y+b.y,a.z+b.z);
-	public static vec3 operator -(vec3 a, vec3 b)=>
-	new vec3(a.x-b.x,a.y-b.y,a.z-b.z);
-	public static vec3 operator -(vec3 a)=>
-	new vec3(-a.x,-a.y,-a.z);
-	public static vec3 operator *(vec3 a, vec3 b) =>
-	new vec3(a.x*b.x,a.y*b.y,a.z*b.z);
-	public static vec3 operator /(vec3 a, vec3 b) =>
-	new vec3(a.x/b.x,a.y/b.y,a.z/b.z);
-	public static vec3 operator ^(vec3 a, vec3 b) =>
-	Mdi.cross(a,b);
-	public static double operator |(vec3 a, vec3 b) =>
-	Mdi.dot(a,b);
-	
-	public double length=>Math.Sqrt(x*x+y*y+z*z);
-	//スウィズル
-	public vec3(vec2 v,double Z){
-		x=v.x;
-		y=v.y;
-		z=Z;
-	}
-	public vec3(double X,vec2 v){
-		x=X;
-		y=v.x;
-		z=v.y;
-	}
-	public vec2 xy{
-		get=>new vec2(x,y);
-		set{
-			x=value.x;
-			y=value.y;
-		}
-	}
-	public vec2 yz{
-		get=>new vec2(y,z);
-		set{
-			y=value.x;
-			z=value.y;
-		}
-	}
-	public vec2 zx{
-		get=>new vec2(z,x);
-		set{
-			z=value.x;
-			x=value.y;
-		}
-	}
-	public vec2 yx{
-		get=>new vec2(y,x);
-		set{
-			y=value.x;
-			x=value.y;
-		}
-	}
-	public vec2 zy{
-		get=>new vec2(z,y);
-		set{
-			z=value.x;
-			y=value.y;
-		}
-	}
-	public vec2 xz{
-		get=>new vec2(x,z);
-		set{
-			x=value.x;
-			z=value.y;
-		}
-	}
-	public override string ToString() => $"({x},{y},{z})";
-}
-public struct vec4{
-	public double x;
-	public double y;
-	public double z;
-	public double w;
-	public const int dim=4;
-	public vec4(double X,double Y,double Z,double W){
-		x=X;
-		y=Y;
-		z=Z;
-		w=W;
-	}
-	
-	public static implicit operator vec4(double a) =>
-	new vec4(a,a,a,a);
-	
-	public static implicit operator vec4(vec2 a) =>
-	new vec4(a,0,0);
-	
-	public static implicit operator vec4(vec3 a) =>
-	new vec4(a,0);
-	
-	public static implicit operator vec4((double,double,double,double) t) =>
-	new vec4(t.Item1,t.Item2,t.Item3,t.Item4);
-	
-	//二項演算
-	public static vec4 operator +(vec4 a, vec4 b)=>
-	new vec4(a.x+b.x,a.y+b.y,a.z+b.z,a.w+b.w);
-	public static vec4 operator -(vec4 a, vec4 b)=>
-	new vec4(a.x-b.x,a.y-b.y,a.z-b.z,a.w-b.w);
-	public static vec4 operator -(vec4 a)=>
-	new vec4(-a.x,-a.y,-a.z,-a.w);
-	public static vec4 operator *(vec4 a, vec4 b) =>
-	new vec4(a.x*b.x,a.y*b.y,a.z*b.z,a.w*b.w);
-	public static vec4 operator /(vec4 a, vec4 b) =>
-	new vec4(a.x/b.x,a.y/b.y,a.z/b.z,a.w/b.w);
-	public static double operator |(vec4 a, vec4 b) =>
-	Mdi.dot(a,b);
-	
-	public double length=>Math.Sqrt(x*x+y*y+z*z+w*w);
-	//スウィズル
-	public vec4(vec2 v,double a,double b){
-		x=v.x;
-		y=v.y;
-		z=a;
-		w=b;
-	}
-	public vec4(double a,vec2 v,double b){
-		x=a;
-		y=v.x;
-		z=v.y;
-		w=b;
-	}
-	public vec4(double a,double b,vec2 v){
-		x=a;
-		y=b;
-		z=v.x;
-		w=v.y;
-	}
-	public vec4(vec2 u,vec2 v){
-		x=u.x;
-		y=u.y;
-		z=v.x;
-		w=v.y;
-	}
-	public vec4(vec3 v,double a){
-		x=v.x;
-		y=v.y;
-		z=v.z;
-		w=a;
-	}
-	public vec4(double a,vec3 v){
-		x=a;
-		y=v.x;
-		z=v.y;
-		w=v.z;
-	}
-	public vec3 xyz{
-		get=>new vec3(x,y,z);
-		set{
-			x=value.x;
-			y=value.y;
-			z=value.z;
-		}
-	}
-	public vec3 yzw{
-		get=>new vec3(y,z,w);
-		set{
-			y=value.x;
-			z=value.y;
-			w=value.z;
-		}
-	}
-	public vec3 zwx{
-		get=>new vec3(z,w,x);
-		set{
-			z=value.x;
-			w=value.y;
-			x=value.z;
-		}
-	}
-	public vec3 wxy{
-		get=>new vec3(w,x,y);
-		set{
-			w=value.x;
-			x=value.y;
-			y=value.z;
-		}
-	}
-	public override string ToString() => $"({x},{y},{z},{w})";
-}
-public struct Vector{
-	double[] data;
-	public double[] raw=>data;
-	public int dim=>data.Length;
-	public double length=>Mdi.sqrt(Mdi.dot(this,this));
-	public Vector(int a){
-		data=new double[a];
-	}
-	public Vector(params double[] values){
-		data=values;
-	}
-	public double this[int i]{
+//数列
+public struct Seq<T>{
+	public List<T> d=new List<T>();
+	public T this[int i]{
 		get{
-			if(i<dim){
-				return data[i];
+			return d[i%d.Count];
+		}
+		set=>d[i]=value;
+	}
+	public Seq(){
+		//空集合
+		d=new List<T>();
+	}
+	public Seq(List<T> a){
+		d=a;
+	}
+	public bool inset(T value){
+		return d.IndexOf(value)!=-1;
+	}
+	public bool notinset(T value){
+		return d.IndexOf(value)==-1;
+	}
+	public bool subset(Seq<T> a){
+		List<T> res=a.d;
+		foreach(T s in d){
+			int i=res.IndexOf(s);
+			if(i!=-1){
+				res.RemoveAt(i);
 			}
-			return 0;
 		}
-		set=>data[i]=value;
+		return res.Count==0;
 	}
-	public static implicit operator Vector(double x)=>
-	new Vector(x);
-	public static implicit operator Vector((double,double) t)=>
-	new Vector(t.Item1,t.Item2);
-	public static implicit operator Vector((double,double,double) t)=>
-	new Vector(t.Item1,t.Item2,t.Item3);
-	public static implicit operator Vector((double,double,double,double) t)=>
-	new Vector(t.Item1,t.Item2,t.Item3,t.Item4);
-	public static implicit operator Vector((double,double,double,double,double) t)=>
-	new Vector(t.Item1,t.Item2,t.Item3,t.Item4,t.Item5);
-	public static implicit operator Vector((double,double,double,double,double,double) t)=>
-	new Vector(t.Item1,t.Item2,t.Item3,t.Item4,t.Item5,t.Item6);
-	//演算子など
-	public static Vector operator +(Vector a,Vector b){
-		Vector res=new Vector(Math.Max(a.dim,b.dim));
-		for(int k=0; k<res.dim; ++k){
-			res[k]=a[k]+b[k];
+
+	public int indexOf(T value){
+		return d.IndexOf(value);
+	}
+	public int size=>d.Count;
+
+	public static Seq<T> operator +(Seq<T> a,T b)=>new Seq<T>(new List<T>(a.d){b});
+	public static Seq<T> operator +(T a,Seq<T> b)=>new Seq<T>(new List<T>(b.d){a});
+	public static Seq<T> operator +(Seq<T> a,Seq<T> b){
+		List<T> res=a.d;
+		foreach(T B in b.d){
+			res.Add(B);
 		}
-		return res;
+		return new Seq<T>(res);
 	}
-	public static Vector operator -(Vector a,Vector b){
-		Vector res=new Vector(Math.Max(a.dim,b.dim));
-		for(int k=0; k<res.dim; ++k){
-			res[k]=a[k]-b[k];
+	public static Seq<T> operator *(Seq<T> a,Seq<T> b){
+		List<T> res=a.d;
+		for(int k=0; k<res.Count; ++k){
+			int i=b.d.IndexOf(res[k]);
+			if(i==-1){
+				res.RemoveAt(k);
+				k--;
+			}
 		}
-		return res;
+		return new Seq<T>(res);
 	}
-	public static Vector operator *(Vector a,Vector b){
-		Vector res=new Vector(Math.Max(a.dim,b.dim));
-		for(int k=0; k<res.dim; ++k){
-			res[k]=a[k]*b[k];
+	public static Seq<T> operator -(Seq<T> a,T b){
+		List<T> res=a.d;
+		res.Remove(b);
+		return new Seq<T>(res);
+	}
+	public static Seq<T> operator /(Seq<T> a,T b){
+		List<T> res=a.d;
+		for(int k=0; k<res.Count; ++k){
+			if(EqualityComparer<T>.Default.Equals(a.d[k],b)){
+				res.RemoveAt(k);
+				k--;
+			}
 		}
-		return res;
+		return new Seq<T>(res);
 	}
-	public static Vector operator *(Vector a,double b){
-		Vector res=new Vector(a.dim);
-		for(int k=0; k<res.dim; ++k){
-			res[k]=a[k]*b;
+	public static Seq<T> operator /(Seq<T> a,Seq<T> b){
+		List<T> res=a.d;
+		for(int k=0; k<res.Count; ++k){
+			if(b.d.IndexOf(a.d[k])!=-1){
+				a.d.RemoveAt(k);
+				k--;
+			}
 		}
-		return res;
+		return new Seq<T>(res);
 	}
-	public static Vector operator *(double a,Vector b){
-		Vector res=new Vector(b.dim);
-		for(int k=0; k<res.dim; ++k){
-			res[k]=a*b[k];
-		}
-		return res;
-	}
-	public static Vector operator /(Vector a,Vector b){
-		Vector res=new Vector(Math.Max(a.dim,b.dim));
-		for(int k=0; k<res.dim; ++k){
-			res[k]=a[k]/b[k];
-		}
-		return res;
-	}
-	public static Vector operator /(Vector a,double b){
-		Vector res=new Vector(a.dim);
-		for(int k=0; k<res.dim; ++k){
-			res[k]=a[k]/b;
+	public static Seq<T> operator |(Seq<T> a,Func<T,bool> b){
+		Seq<T> res=new Seq<T>();
+		foreach(T s in a.d){
+			if(b(s)){
+				res+=s;//要素の追加
+			}
 		}
 		return res;
 	}
-	public static double operator |(Vector a,Vector b)=>Mdi.dot(a,b);
-	public override string ToString()=>"("+string.Join(",",data)+")";
 }
-
-public struct Complex{
-	public vec2 z;
-
-	public Complex(double real, double imag){
-		z=new vec2(real,imag);
+//集合
+public struct Set<T>{
+	public IEnumerator<T> GetEnumerator(){
+        foreach (var x in d){
+            yield return x; // yield return で順番に返す
+		}
+    }
+	public HashSet<T> d;
+	public Set(IEnumerable<T> items){
+        d =new HashSet<T>(items);
+    }
+	public Set(){
+		//空集合
+		d=new HashSet<T>();
 	}
-	public Complex(vec2 Z){
-		z=Z;
+	public Set(List<T> a){
+		d=new HashSet<T>(a);
 	}
-	//いいのかねぇ...
-	public static implicit operator Complex(double real)=>
-	new Complex(real,0);
-	
-	public static implicit operator Complex((double,double) t) =>
-	new Complex(t.Item1,t.Item2);
-	
-	public double real=>z.x;
-	public double imag=>z.y;
-	
-	public static Complex operator +(Complex a, Complex b)=>
-	new Complex(a.z+b.z);
-	public static Complex operator -(Complex a, Complex b)=>
-	new Complex(a.z-b.z);
-	public static Complex operator -(Complex a)=>
-	new Complex(-a.z);
-	public static Complex operator *(Complex a, Complex b)=>
-	new Complex(a.real*b.real-a.imag*b.imag,a.real*b.imag+a.imag*b.real);
-	public static Complex operator *(Complex a, double b)=>
-	new Complex(b*a.real,b*a.imag);
-	public static Complex operator *(double a, Complex b)=>
-	new Complex(a*b.real,a*b.imag);
-	public static Complex operator /(Complex a, Complex b)=>
-	a*~b/Mdi.dot(b.z,b.z);
-	public static Complex operator /(Complex a, double b)=>
-	new Complex(a.real/b,a.imag/b);
-	public static Complex operator ~(Complex a)=>
-	Mdi.conj(a);
-	public static Complex operator ^(Complex a,Complex b)=>
-	Mdi.pow(a,b);
-	public static Complex operator ^(Complex a,double b)=>
-	Mdi.pow(a,b);
-	public static Complex operator ^(double a,Complex b)=>
-	Mdi.pow(a,b);
-
-	public override string ToString() => $"{z.x}+{z.y}i";
+	public Set(HashSet<T> a){
+		d=a;
+	}
+	public bool inset(T value){
+		return d.Contains(value);
+	}
+	public bool notinset(T value){
+		return !inset(value);
+	}
+	public bool subset(Set<T> a){
+		return d.IsSupersetOf(a.d);
+	}
+	public Set<T> copy(){
+		Set<T> res=new Set<T>();
+		foreach(var p in d){
+			res+=p;
+		}
+		return res;
+	}
+	public int size=>d.Count;
+	public static bool operator ==(Set<T> a,Set<T> b){
+		return a.d.SetEquals(b.d);
+	}
+	public static bool operator !=(Set<T> a,Set<T> b){
+		return !a.d.SetEquals(b.d);
+	}
+	public override bool Equals(object obj){
+    	if (obj is not Set<T> other) return false;
+    	return d.SetEquals(other.d);
+	}
+	public override int GetHashCode(){
+    	int hash=17;
+    	foreach (var item in d){
+        	hash=hash*31+(item?.GetHashCode()??0);
+		}
+    	return hash;
+	}
+	public static bool operator <(Set<T> a,Set<T> b){
+		return b.subset(a);
+	}
+	public static bool operator >(Set<T> a,Set<T> b){
+		return a.subset(b);
+	}
+	public static bool operator >(T a,Set<T> b){
+		return false;
+	}
+	public static bool operator <(T a,Set<T> b){
+		return b.inset(a);
+	}
+	public static bool operator >(Set<T> a,T b){
+		return a.inset(b);
+	}
+	public static bool operator <(Set<T> a,T b){
+		return false;
+	}
+	public static Set<T> operator +(Set<T> a,T b){
+		Set<T> res=new Set<T>(a.d);
+        res.d.Add(b);
+		return res;
+	}
+	public static Set<T> operator +(T a,Set<T> b){
+		Set<T> res=new Set<T>(b.d);
+        res.d.Add(a);
+		return res;
+	}
+	public static Set<T> operator +(Set<T> a,Set<T> b){
+		Set<T> res=new Set<T>(a.d);
+        res.d.UnionWith(b.d);
+		return res;
+	}
+	public static Set<T> operator *(Set<T> a,Set<T> b){
+		Set<T> res=new Set<T>(a.d);
+        res.d.IntersectWith(b.d);
+		return res;
+	}
+	public static Set<T> operator /(Set<T> a,T b){
+		Set<T> res=new Set<T>(a.d);
+        res.d.Remove(b);
+		return res;
+	}
+	public static Set<T> operator /(Set<T> a,Set<T> b){
+		Set<T> res=new Set<T>(a.d);
+        res.d.ExceptWith(b.d);
+		return res;
+	}
+	public static Set<T> operator |(Set<T> a,Func<T,bool> b){
+		Set<T> res=new Set<T>();
+		foreach(T s in a.d){
+			if(b(s)){
+				res+=s;//要素の追加
+			}
+		}
+		return res;
+	}
 }
-public struct Quat{
-	public vec4 q;
-
-	public Quat(double real, double i,double j,double k){
-		q=new vec4(real,i,j,k);
+//対象群
+public class S:IGroup<S>{
+    public int[] p;
+    public int size=>p.Length;
+    public S(int[] arr){
+        p=(int[])arr.Clone();
+    }
+    public S identity(){
+        int[] res=new int[size];
+        for(int i=0; i<size; i++){
+			res[i]=i;
+		}
+        return new S(res);
+    }
+    public static S operator *(S a,S b){
+		var res=new int[a.size];
+        for(int i=0; i<a.size; i++){
+            res[i]=a.p[b.p[i]];
+        }
+        return new S(res);
 	}
-	public Quat(double real,vec3 v){
-		q=new vec4(real,v.x,v.y,v.z);
+    public S inverse(){
+        var res=new int[size];
+        for(int i=0; i<size; i++){
+            res[p[i]]=i;
+        }
+        return new S(res);
+    }
+    public override string ToString() {
+        return $"({string.Join(",", p)})";
+    }
+}
+public abstract class TopologicalSpace<X>{
+	public Set<X> point=new Set<X>();
+    public Set<Set<X>> topology=new Set<Set<X>>();
+	//topology
+    public TopologicalSpace(Set<X> points){
+        point=points.copy();
+    }
+    public void AddTopolygy(Set<X> subset){
+        var set=subset.copy();
+        if(!(set<point)){
+            throw new ArgumentException("Illegal Input");
+		}
+        topology+=set;
+    }
+    public bool isOpen(Set<X> subset){
+        return topology.d.Any(os=>os==subset);
+    }
+}
+public abstract class HausdorffSpace<X>:TopologicalSpace<X>{
+	public HausdorffSpace(Set<X> points):base(points){
+    }
+}
+public abstract class MetricSpace<X>:HausdorffSpace<X>{
+    public Func<X,X,double> dist;
+    public MetricSpace(Set<X> points,Func<X,X,double> distance):base(points){
+        dist=distance;
+    }
+	//ε-近傍
+    public Set<X> neighbor(X a,double epsilon){
+        return point|(x=>dist(x,a)<epsilon);
+    }
+	public bool isOpenAt(Set<X> A,X a,double epsilon){
+		if(A<point){
+			if(neighbor(a,epsilon)<A){
+				return true;
+			}
+		}
+		return false;
 	}
-	public Quat(vec4 Q){
-		q=Q;
+	public bool isOpen(Set<X> A,double epsilon){
+		if(A<point){
+			foreach(var a in A){
+				if(!(neighbor(a,epsilon)<A)){
+					return false;
+				}
+				return true;
+			}
+		}
+		return false;
 	}
-	public Quat(Complex v){
-		q=new vec4(v.real,v.imag,0,0);//所説あり
-	}
-	public static implicit operator Quat(double real)=>
-	new Quat(real,0,0,0);
-	public static implicit operator Quat((double,double,double,double) t)=>
-	new Quat(t.Item1,t.Item2,t.Item3,t.Item4);
-	
-	public double real=>q.x;
-	public vec3 imag=>new vec3(q.y,q.z,q.w);
-	public double i=>q.y;
-	public double j=>q.z;
-	public double k=>q.w;
-	
-	public static Quat operator +(Quat a,Quat b)=>
-	new Quat(a.q+b.q);
-	public static Quat operator -(Quat a,Quat b)=>
-	new Quat(a.q-b.q);
-	public static Quat operator -(Quat a)=>
-	new Quat(-a.q);
-	public static Quat operator *(Quat a,Quat b)=>
-	new Quat(a.real*b.q+new vec4(-(a.q.yzw|b.q.yzw),a.q.yzw^b.q.yzw)+b.real*a.q.yzw);
-	public static Quat operator *(Quat a,double b)=>
-	new Quat(a.q*b);
-	public static Quat operator *(double a,Quat b)=>
-	new Quat(a*b.q);
-	public static Quat operator /(Quat a,double b)=>
-	new Quat(a.q/b);
-
-	public override string ToString() => $"{q.x}+{q.y}i+{q.z}j+{q.w}k";
 }
