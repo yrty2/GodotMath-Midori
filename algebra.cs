@@ -12,7 +12,11 @@ public interface IQuasigroup<Q>:IMagma<Q> where Q:IQuasigroup<Q>{
 public interface ILoop<Q>:IQuasigroup<Q> where Q:ILoop<Q>{
 	Q identity();
 }
-public interface ISemigroup<S>:IMagma<S> where S:ISemigroup<S>{}
+public interface ISemigroup<S>:IMagma<S> where S:ISemigroup<S>{
+	static void Law(){
+		GD.Print("Associative:(a*b)*c=a*(b*c)");
+	}
+}
 public interface IMonoid<S>:ISemigroup<S> where S:IMonoid<S>{
 	S identity();
 }
@@ -20,20 +24,40 @@ public interface IGroup<G>:IMonoid<G> where G:IGroup<G>{
 	G inverse();
 }
 public interface IAbelianGroup<A> where A:IAbelianGroup<A>{
+	static void Law(){
+		GD.Print("Associative:(a*b)*c=a*(b*c)");
+		GD.Print("Commutative:a*b=b*a");
+	}
     static abstract A operator +(A a,A b);
     static abstract A operator -(A a,A b);
     static abstract A operator -(A a);
     static abstract A zero {get;} //加法的な単位元を意味する
 }
 public interface IRing<T>:IMultiplyOperators<T,T,T> where T:IRing<T>{
+	static void Law(){
+		GD.Print("Associative+:(a+b)+c=a+(b+c)");
+		GD.Print("Commutative+:a+b=b+a");
+		GD.Print("Associative*:(a*b)*c=a*(b*c)");
+		GD.Print("Distributive1:a*(b+c)=a*b+a*c");
+		GD.Print("Distributive2:(a+b)*c=a*c+b*c");
+	}
 	static abstract T operator +(T a,T b);
     static abstract T operator -(T a,T b);
     static abstract T operator *(T a,T b);
 	static abstract T zero {get;}
     static abstract T one {get;}
 }
+public interface ICommutativeRing<T>:IRing<T> where T:ICommutativeRing<T>{
+	static new void Law(){
+		GD.Print("Associative+:(a+b)+c=a+(b+c)");
+		GD.Print("Commutative+:a+b=b+a");
+		GD.Print("Associative*:(a*b)*c=a*(b*c)");
+		GD.Print("Commutative*:a*b=b*a");
+		GD.Print("Distributive1:a*(b+c)=a*b+a*c");
+		GD.Print("Distributive2:(a+b)*c=a*c+b*c");
+	}
+}
 public interface IField<T>:IRing<T>,IDivisionOperators<T,T,T> where T:IField<T>{
-	//T inverse;
 	static abstract T operator /(T a,T b);//乗法逆元
 }
 public interface IAlgebra<A,K>:IModule<A,K> where A:IAlgebra<A,K> where K:IMultiplyOperators<K,K,K>,IDivisionOperators<K,K,K>{
@@ -44,11 +68,61 @@ public interface IModule<M,R>:IAbelianGroup<M> where M:IModule<M,R> where R:IMul
 	static abstract M operator *(M a,R b);
 	static abstract R one {get;}//乗法的単位元
 }
-public interface IVectorSpace<V>:IModule<V,double> where V:IVectorSpace<V>{}
-public interface IMetricVectorSpace<V>:IVectorSpace<V> where V:IMetricVectorSpace<V>{
+public interface IVectorSpace<V,R>:IModule<V,R> where V:IVectorSpace<V,R> where R:IMultiplyOperators<R,R,R>,IDivisionOperators<R,R,R>{}
+public interface INormedVectorSpace<V,R>:IVectorSpace<V,R> where V:INormedVectorSpace<V,R> where R:IMultiplyOperators<R,R,R>,IDivisionOperators<R,R,R>{
+	static R length;
+}
+public interface IMetricVectorSpace<V,R>:INormedVectorSpace<V,R> where V:IMetricVectorSpace<V,R> where R:IMultiplyOperators<R,R,R>,IDivisionOperators<R,R,R>{
 	static abstract double operator |(V a,V b);//内積
 }
 public interface ICategory<O,M>{}
+//束
+public interface ILattice<T>{
+    static abstract T meet(T a,T b);
+    static abstract T join(T a,T b);
+}
+public interface IBooleanAlgebra<T>:ILattice<T>{
+    static abstract T Not(T a);
+    static abstract T Zero { get; }
+    static abstract T One { get; }
+}
+//有理数
+public readonly struct RInt:IField<RInt>{
+	public readonly int a,b;
+	public RInt(int A,int B){
+		if(B==0){
+    		throw new ArgumentException("RIntはゼロ除算を許しません");
+		}
+		a=A;
+		b=B;
+	}
+	//乗法及び加法の単位元
+	public static RInt one=>new(1,1);
+	public static RInt zero=>new(0,1);
+	//二項演算
+	public static RInt operator +(RInt x,RInt y)=>new(x.a*y.b+y.a*x.b,x.b*y.b);
+	public static RInt operator -(RInt x,RInt y)=>new(x.a*y.b-y.a*x.b,x.b*y.b);
+	public static RInt operator *(RInt x,RInt y)=>new(x.a*y.a,x.b*y.b);
+	public static RInt operator /(RInt x,RInt y)=>new(x.a*y.b,x.b*y.a);
+	//等号、順序
+	public static bool operator ==(RInt x,RInt y)=>x.a/x.b==y.a/y.b;
+	public static bool operator !=(RInt x,RInt y)=>x.a/x.b!=y.a/y.b;
+	public static bool operator <(RInt x,RInt y)=>x.a/x.b<y.a/y.b;
+	public static bool operator >(RInt x,RInt y)=>x.a/x.b>y.a/y.b;
+	public static bool operator <=(RInt x,RInt y)=>x.a/x.b<=y.a/y.b;
+	public static bool operator >=(RInt x,RInt y)=>x.a/x.b>=y.a/y.b;
+	public override int GetHashCode()=>HashCode.Combine(a,b);
+	public override bool Equals(object obj){
+        if(obj is RInt p){
+            return a==p;
+		}
+        return false;
+    }
+	//utility
+	public static implicit operator RInt(int a)=>new(a,1);
+	public static implicit operator RInt(uint a)=>new((int)a,1);
+	public static implicit operator double(RInt a)=>a.a/a.b;
+}
 //代数
 public readonly struct Complex:IAlgebra<Complex,double>{
 	public readonly vec2 z;
@@ -60,14 +134,13 @@ public readonly struct Complex:IAlgebra<Complex,double>{
 	public Complex(vec2 Z){
 		z=Z;
 	}
-	//いいのかねぇ...
 	public static implicit operator Complex(double real)=>
-	new Complex(real,0);
+	new(real,0);
 
 	public static implicit operator Complex(vec2 p)=>new(p);
 	
 	public static implicit operator Complex((double,double) t) =>
-	new Complex(t.Item1,t.Item2);
+	new(t.Item1,t.Item2);
 	
 	public double real=>z.x;
 	public double imag=>z.y;
@@ -84,7 +157,18 @@ public readonly struct Complex:IAlgebra<Complex,double>{
 	public static Complex operator ^(Complex a,Complex b)=>Mdi.pow(a,b);
 	public static Complex operator ^(Complex a,double b)=>Mdi.pow(a,b);
 	public static Complex operator ^(double a,Complex b)=>Mdi.pow(a,b);
-
+	public static bool operator ==(Complex a,Complex b){
+		return a.z==b.z;
+	}
+	public static bool operator !=(Complex a,Complex b){
+		return a.z!=b.z;
+	}
+	public override bool Equals(object obj){
+    	return z.Equals(obj);
+	}
+	public override int GetHashCode(){
+    	return z.GetHashCode();
+	}
 	public override string ToString() => $"{z.x}+{z.y}i";
 }
 public readonly struct Quaternion:IAlgebra<Quaternion,double>{
@@ -137,11 +221,24 @@ public readonly struct Quaternion:IAlgebra<Quaternion,double>{
     (~a*new Quaternion(b)*a).imag;
     public static vec3 operator *(vec3 a,Quaternion b)=>
     (b*new Quaternion(a)*(~b)).imag;
+	public static bool operator ==(Quaternion a,Quaternion b){
+		return a.q==b.q;
+	}
+	public static bool operator !=(Quaternion a,Quaternion b){
+		return !(a==b);
+	}
+	public override bool Equals(object obj){
+		if (obj is not Quaternion other) return false;
+    	return this==other;
+	}
+	public override int GetHashCode(){
+    	return HashCode.Combine(real,imag);
+	}
 
 	public override string ToString() => $"{q.x}+{q.y}i+{q.z}j+{q.w}k";
 }
 //線形代数
-public struct vec2:IMetricVectorSpace<vec2>{
+public struct vec2:IMetricVectorSpace<vec2,double>{
 	public double x;
 	public double y;
 	public const int dim=2;
@@ -182,12 +279,25 @@ public struct vec2:IMetricVectorSpace<vec2>{
 	Mdi.dot(a,b);
 	public static double operator ^(vec2 a, vec2 b)=>
 	Mdi.cross(a,b);
+	public static bool operator ==(vec2 a,vec2 b){
+		return a.x==b.x && a.y==b.y;
+	}
+	public static bool operator !=(vec2 a,vec2 b){
+		return !(a==b);
+	}
+	public override bool Equals(object obj){
+		if (obj is not vec2 other) return false;
+    	return this==other;
+	}
+	public override int GetHashCode(){
+    	return HashCode.Combine(x,y);
+	}
 	public double length=>Math.Sqrt(x*x+y*y);
 	public vec3 extend(double a)=>
 		new vec3(x,y,a);
 	public override string ToString() => $"({x},{y})";
 }
-public struct vec3:IMetricVectorSpace<vec3>{
+public struct vec3:IMetricVectorSpace<vec3,double>{
 	public double x;
 	public double y;
 	public double z;
@@ -218,7 +328,19 @@ public struct vec3:IMetricVectorSpace<vec3>{
     public static vec3 operator /(vec3 a, double b)=>new(a.x/b,a.y/b,a.z/b);
 	public static vec3 operator ^(vec3 a, vec3 b)=>Mdi.cross(a,b);
 	public static double operator |(vec3 a, vec3 b)=>Mdi.dot(a,b);
-	
+	public static bool operator ==(vec3 a,vec3 b){
+		return a.x==b.x && a.y==b.y && a.z==b.z;
+	}
+	public static bool operator !=(vec3 a,vec3 b){
+		return !(a==b);
+	}
+	public override bool Equals(object obj){
+		if (obj is not vec3 other) return false;
+    	return this==other;
+	}
+	public override int GetHashCode(){
+    	return HashCode.Combine(x,y,z);
+	}
 	public double length=>Math.Sqrt(x*x+y*y+z*z);
 	//スウィズル
 	public vec3(vec2 v,double Z){
@@ -275,7 +397,7 @@ public struct vec3:IMetricVectorSpace<vec3>{
 	}
 	public override string ToString() => $"({x},{y},{z})";
 }
-public struct vec4:IMetricVectorSpace<vec4>{
+public struct vec4:IMetricVectorSpace<vec4,double>{
 	public double x;
 	public double y;
 	public double z;
@@ -320,7 +442,19 @@ public struct vec4:IMetricVectorSpace<vec4>{
 	new vec4(a.x/b,a.y/b,a.z/b,a.w/b);
 	public static double operator |(vec4 a, vec4 b) =>
 	Mdi.dot(a,b);
-	
+	public static bool operator ==(vec4 a,vec4 b){
+		return a.x==b.x && a.y==b.y && a.z==b.z && a.w==b.w;
+	}
+	public static bool operator !=(vec4 a,vec4 b){
+		return !(a==b);
+	}
+	public override bool Equals(object obj){
+		if (obj is not vec4 other) return false;
+    	return this==other;
+	}
+	public override int GetHashCode(){
+    	return HashCode.Combine(x,y,z,w);
+	}
 	public double length=>Math.Sqrt(x*x+y*y+z*z+w*w);
 	//スウィズル
 	public vec4(vec2 v,double a,double b){
@@ -407,7 +541,7 @@ public struct vec4:IMetricVectorSpace<vec4>{
 	}
 	public override string ToString() => $"({x},{y},{z},{w})";
 }
-public struct Vector:IMetricVectorSpace<Vector>{
+public struct Vector:IMetricVectorSpace<Vector,double>{
 	private readonly double[] data;
 	public double[] raw=>data;
 	public int dim=>data.Length;
@@ -498,6 +632,19 @@ public struct Vector:IMetricVectorSpace<Vector>{
 		}
 		return res;
 	}
+	public static bool operator ==(Vector a,Vector b){
+		return a.data==b.data;
+	}
+	public static bool operator !=(Vector a,Vector b){
+		return !(a==b);
+	}
+	public override bool Equals(object obj){
+		if (obj is not Vector other) return false;
+    	return this==other;
+	}
+	public override int GetHashCode(){
+    	return data.GetHashCode();
+	}
 	public static double operator |(Vector a,Vector b)=>Mdi.dot(a,b);
 	public override string ToString()=>"("+string.Join(",",data)+")";
 }
@@ -534,5 +681,18 @@ public struct mat2:IRing<mat2>{
 	}
 	public static mat2 operator *(double a,mat2 b){
 		return new mat2(a*b.a,a*b.b,a*b.c,a*b.d);
+	}
+	public static bool operator ==(mat2 a,mat2 b){
+		return a.a==b.a && a.b==b.b && a.c==b.c && a.d==b.d;
+	}
+	public static bool operator !=(mat2 a,mat2 b){
+		return !(a==b);
+	}
+	public override bool Equals(object obj){
+		if (obj is not mat2 other) return false;
+    	return this==other;
+	}
+	public override int GetHashCode(){
+    	return HashCode.Combine(a,b,c,d);
 	}
 }
